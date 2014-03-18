@@ -15,7 +15,7 @@ public class ComputeNodeParams {
     private float memoryGap;
     private float memoryLatency;
     private float memoryIOOverhead;
-    private ArrayList<CpuGroupParams> cpuGroups = new ArrayList<CpuGroupParams>();
+    private ArrayList<ProcessorParams> cpuGroups = new ArrayList<ProcessorParams>();
 
     /**
      *
@@ -45,7 +45,7 @@ public class ComputeNodeParams {
         return nbytes * memoryGap + memoryLatency + memoryIOOverhead * 2;
     }
 
-    public void addCpuGroup(CpuGroupParams g) {
+    public void addCpuGroup(ProcessorParams g) {
         cpuGroups.add(g);
     }
 
@@ -53,14 +53,14 @@ public class ComputeNodeParams {
         return cpuGroups.size();
     }
     
-    public CpuGroupParams getCpuGroupParams(int index) {
+    public ProcessorParams getCpuGroupParams(int index) {
         return cpuGroups.get(index);
     }
     
     public int[] getNumberOfCpusPerGroup() {
         int[] numbers = new int[cpuGroups.size()];
         for(int i = cpuGroups.size() - 1; i >= 0; i--) {
-            numbers[i] = cpuGroups.get(i).getCount();
+            numbers[i] = cpuGroups.get(i).getNCores();
         }
         return numbers;
     }
@@ -83,7 +83,7 @@ public class ComputeNodeParams {
 
     public float getTotalSpeed() {
         float sum = 0;
-        for (CpuGroupParams g : cpuGroups) {
+        for (ProcessorParams g : cpuGroups) {
             sum += g.getTotalSpeed();
         }
         return sum;
@@ -91,8 +91,8 @@ public class ComputeNodeParams {
 
     public int getTotalCpus() {
         int sum = 0;
-        for (CpuGroupParams g : cpuGroups) {
-            sum += g.getCount();
+        for (ProcessorParams g : cpuGroups) {
+            sum += g.getNCores();
         }
         return sum;
     }

@@ -258,7 +258,7 @@ public class Simulator {
     
     // <editor-fold defaultstate="collapsed" desc="ClusterParams ceation methods">     
     private static ClusterParams createHomogenousComputer(int cpuPerNode, int nNodes) {
-        CpuGroupParams cpuGroup = new CpuGroupParams(CPU_SPEED, cpuPerNode);
+        ProcessorParams cpuGroup = new ProcessorParams(cpuPerNode, CPU_SPEED);
         
         ComputeNodeParams node = new ComputeNodeParams(
                 MEMORY_GAP, MEMORY_LATENCY, MEMORY_OVERHEAD);
@@ -279,7 +279,7 @@ public class Simulator {
                 
         ComputeNodeParams node = new ComputeNodeParams(MEMORY_GAP, MEMORY_LATENCY, MEMORY_OVERHEAD);
         for(int i = nCpus.length - 1; i >= 0; i--) {
-            node.addCpuGroup(new CpuGroupParams(speed[i], nCpus[i]));
+            node.addCpuGroup(new ProcessorParams(nCpus[i], speed[i]));
         }
         
         ComputerParams computerParams = new ComputerParams(node, nNodes, INTERCONNECT_GAP, INTERCONNECT_LATENCY, INTERCONNECT_OVERHEAD);
@@ -298,7 +298,7 @@ public class Simulator {
         for(int j = 0; j < nNode.length; j++) {
             ComputeNodeParams node = new ComputeNodeParams(MEMORY_GAP, MEMORY_LATENCY, MEMORY_OVERHEAD);
             for(int i = nCpus.length - 1; i >= 0; i--) {
-                node.addCpuGroup(new CpuGroupParams(speed[i], nCpus[i]));
+                node.addCpuGroup(new ProcessorParams(nCpus[i], speed[i]));
             }
             ComputerParams computerParams = new ComputerParams(node, nNode[j], INTERCONNECT_GAP, INTERCONNECT_LATENCY, INTERCONNECT_OVERHEAD);
             cluster.addComputer(computerParams);

@@ -134,7 +134,7 @@ public abstract class PartitionMaker {
                         
                         GridDivision2D[] cpuDivisions = divide1D(
                                 cpuGroup, 
-                                nodeParams.getCpuGroupParams(k).getCount(),
+                                nodeParams.getCpuGroupParams(k).getNCores(),
                                 DivisionBy.ROWS);
                         
                         cpuGroup.setSubdivisions(cpuDivisions);
@@ -197,7 +197,7 @@ public abstract class PartitionMaker {
                         
                         GridDivision2D[] cpuDivisions = divide1D(
                                 cpuGroup, 
-                                nodeParams.getCpuGroupParams(k).getCount(),
+                                nodeParams.getCpuGroupParams(k).getNCores(),
                                 dCpuGroup);
                         
                         cpuGroup.setSubdivisions(cpuDivisions);
@@ -621,11 +621,11 @@ public abstract class PartitionMaker {
                     
                     for(int k = node.getNumberOfSubPartitions() - 1; k >= 0; k--) {
                         PartitionMap cpuGroup = node.getSubPartition(k);
-                        CpuGroupParams cpuGroupParams = nodeParams.getCpuGroupParams(k);
+                        ProcessorParams cpuGroupParams = nodeParams.getCpuGroupParams(k);
                         
                         bounds = cpuGroup;
-                        nRowDivs = findBestPartitioning(bounds.getNRows(), bounds.getNCols(), cpuGroupParams.getCount());
-                        nColDivs = cpuGroupParams.getCount() / nRowDivs;
+                        nRowDivs = findBestPartitioning(bounds.getNRows(), bounds.getNCols(), cpuGroupParams.getNCores());
+                        nColDivs = cpuGroupParams.getNCores() / nRowDivs;
                         
                         subdivs = divide2D(bounds, nRowDivs, nColDivs);
                         
@@ -725,11 +725,11 @@ public abstract class PartitionMaker {
                 
                 for(int cpuGroupRank = nodeParams.getNumberOfCpuGroups() - 1; cpuGroupRank >= 0; cpuGroupRank--) {
                     PartitionMap cpuGroupMap = nodeMap.getSubPartition(cpuGroupRank);
-                    CpuGroupParams cpuGroupParams = nodeParams.getCpuGroupParams(cpuGroupRank);
+                    ProcessorParams cpuGroupParams = nodeParams.getCpuGroupParams(cpuGroupRank);
                     
-                    for(int cpuRank = cpuGroupParams.getCount() - 1; cpuRank >= 0; cpuRank--) {
+                    for(int cpuRank = cpuGroupParams.getNCores() - 1; cpuRank >= 0; cpuRank--) {
                         PartitionMap cpuMap = cpuGroupMap.getSubPartition(cpuRank);
-                        timeFactors[cpuCounter] = cpuGroupParams.getIndividualSpeed() * cpuMap.getNCells();
+                        timeFactors[cpuCounter] = cpuGroupParams.getSpeedPerCore() * cpuMap.getNCells();
                         if(cpuCounter == 0) {
                             minTimeFactor = timeFactors[cpuCounter];
                         } else {
@@ -899,7 +899,7 @@ public abstract class PartitionMaker {
     ///// MAIN ////////////////////////////////////////////////////////////////
     
     private static ClusterParams createHomogenousComputer(int cpuPerNode, int nNodes) {
-        CpuGroupParams cpuGroup = new CpuGroupParams(1.0f, cpuPerNode);
+        ProcessorParams cpuGroup = new ProcessorParams(cpuPerNode, 1.0f);
         
         ComputeNodeParams node = new ComputeNodeParams(0, 0, 0);
         node.addCpuGroup(cpuGroup);
@@ -918,7 +918,7 @@ public abstract class PartitionMaker {
                 
         ComputeNodeParams node = new ComputeNodeParams(0, 0, 0);
         for(int i = nCpus.length - 1; i >= 0; i--) {
-            node.addCpuGroup(new CpuGroupParams(speed[i], nCpus[i]));
+            node.addCpuGroup(new ProcessorParams(nCpus[i], speed[i]));
         }
         
         ComputerParams computerParams = new ComputerParams(node, nNodes, 0, 0, 0);

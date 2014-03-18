@@ -1511,7 +1511,7 @@ public class SimulationModel {
                         0, 0, 0);
                 
                 threads[groupRank] = new CpuThreadModel[nThreads[groupRank]];
-                float speed = params.getCpuGroupParams(groupRank).getIndividualSpeed();
+                float speed = params.getCpuGroupParams(groupRank).getSpeedPerCore();
                 
                 for(int threadRank = nThreads[groupRank] - 1; threadRank >= 0; threadRank--) {
                     CpuThreadModel thread = new CpuThreadModel(

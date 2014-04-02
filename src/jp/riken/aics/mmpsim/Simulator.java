@@ -435,7 +435,7 @@ public class Simulator {
             return;
         
         if(level == 0) {
-            ui.setGridSize(p.nRows, p.nCols);
+            ui.setGridSize(p.getNRows(), p.getNCols());
             ui.clearGroups();
         } else if(level == 1)
             ui.createGroup(p, 1, false);

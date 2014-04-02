@@ -181,10 +181,10 @@ public class SimulatorUIForm extends javax.swing.JFrame implements ActionListene
     }
     
     public void createGroup(GridDivision2D bounds, int spacing, boolean draw) {
-        gridCanvas.createGroup(bounds.rowOffset,
-                bounds.colOffset,
-                bounds.rowOffset + bounds.nRows,
-                bounds.colOffset + bounds.nCols, spacing, draw);
+        gridCanvas.createGroup(bounds.getRowOffset(),
+                bounds.getColOffset(),
+                bounds.getRowOffset() + bounds.getNRows(),
+                bounds.getColOffset() + bounds.getNCols(), spacing, draw);
         gridCanvas.repaint();
         gridCanvas.revalidate();
     }

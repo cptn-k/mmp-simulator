@@ -13,7 +13,7 @@ import net.hkhandan.util.TextTools;
  *
  * @author hamed
  */
-public class PartitionMap extends GridDivision2D implements Cloneable {
+public class PartitionMap extends GridDivision2D {
     private final int[] address;
     private PartitionMap[] subPartitions = null;
     private String description = null;
@@ -25,7 +25,7 @@ public class PartitionMap extends GridDivision2D implements Cloneable {
     }
     
     public PartitionMap(GridDivision2D div) {
-        super(div.rowOffset, div.colOffset, div.nRows, div.nCols);
+        super(div.getRowOffset(), div.getColOffset(), div.getNRows(), div.getNCols());
         this.address = null;
     }
             
@@ -35,7 +35,7 @@ public class PartitionMap extends GridDivision2D implements Cloneable {
     }
     
     private PartitionMap(int[] address, GridDivision2D div) {
-        super(div.rowOffset, div.colOffset, div.nRows, div.nCols);
+        super(div.getRowOffset(), div.getColOffset(), div.getNRows(), div.getNCols());
         this.address = address;
     }
 
@@ -138,37 +138,37 @@ public class PartitionMap extends GridDivision2D implements Cloneable {
     private static boolean isAdjecentTo(GridDivision2D div1, Direction pos, GridDivision2D div2) {
         switch(pos) {
             case ABOVE:
-                return (div2.rowOffset == div1.getLastRow() + 1)
-                        && (isInRange(div2.colOffset, div1.colOffset, div1.getLastCol())
-                            || isInRange(div1.colOffset, div2.colOffset, div2.getLastCol()));
+                return (div2.getRowOffset() == div1.getLastRow() + 1)
+                        && (isInRange(div2.getColOffset(), div1.getColOffset(), div1.getLastCol())
+                            || isInRange(div1.getColOffset(), div2.getColOffset(), div2.getLastCol()));
 
             case BELOW:
                 return isAdjecentTo(div2, Direction.ABOVE, div1);
                 
             case LEFT:
-                return (div1.getLastCol() + 1 == div2.colOffset)
-                        && (isInRange(div1.rowOffset, div2.rowOffset, div2.getLastRow()) 
-                            || isInRange(div2.rowOffset, div1.rowOffset, div1.getLastRow()));
+                return (div1.getLastCol() + 1 == div2.getColOffset())
+                        && (isInRange(div1.getRowOffset(), div2.getRowOffset(), div2.getLastRow()) 
+                            || isInRange(div2.getRowOffset(), div1.getRowOffset(), div1.getLastRow()));
                 
             case RIGHT:
                 return isAdjecentTo(div2, Direction.LEFT, div1);
                 
             case UPPER_RIGHT:
-                return (isInRange(div2.rowOffset - 1, div1.rowOffset, div1.getLastRow())
-                        && isInRange(div2.getLastCol() + 1, div1.colOffset, div1.getLastCol()));
+                return (isInRange(div2.getRowOffset() - 1, div1.getRowOffset(), div1.getLastRow())
+                        && isInRange(div2.getLastCol() + 1, div1.getColOffset(), div1.getLastCol()));
                         
                                 
             case LOWER_LEFT:
-                return (isInRange(div2.getLastRow() + 1, div1.rowOffset, div1.getLastRow())
-                        && isInRange(div2.colOffset - 1, div1.colOffset, div1.getLastCol()));
+                return (isInRange(div2.getLastRow() + 1, div1.getRowOffset(), div1.getLastRow())
+                        && isInRange(div2.getColOffset() - 1, div1.getColOffset(), div1.getLastCol()));
                 
             case UPPER_LEFT:
-                return (isInRange(div2.rowOffset - 1, div1.rowOffset, div1.getLastRow())
-                        && isInRange(div2.colOffset - 1, div1.colOffset, div1.getLastCol()));
+                return (isInRange(div2.getRowOffset() - 1, div1.getRowOffset(), div1.getLastRow())
+                        && isInRange(div2.getColOffset() - 1, div1.getColOffset(), div1.getLastCol()));
                 
             case LOWER_RIGHT:
-                return (isInRange(div2.getLastRow() + 1, div1.rowOffset, div1.getLastRow())
-                        && isInRange(div2.getLastCol() + 1, div1.colOffset, div1.getLastCol()));
+                return (isInRange(div2.getLastRow() + 1, div1.getRowOffset(), div1.getLastRow())
+                        && isInRange(div2.getLastCol() + 1, div1.getColOffset(), div1.getLastCol()));
         }
         
         return false;
@@ -176,18 +176,6 @@ public class PartitionMap extends GridDivision2D implements Cloneable {
     
     private static boolean isInRange(int n, int a, int b) {
         return n >= a && n <= b;
-    }
-    
-    @Override
-    public Object clone() {
-        PartitionMap clone = new PartitionMap(address, rowOffset, colOffset, nRows, nCols);
-        clone.description = description;
-        clone.subPartitions = new PartitionMap[subPartitions.length];
-        for(int i = 0; i < subPartitions.length; i++) {
-            clone.subPartitions[i] = (PartitionMap)subPartitions[i].clone();
-            clone.subPartitions[i].parent = clone;
-        }
-        return clone;
     }
     
     public int getSizeInBits() {

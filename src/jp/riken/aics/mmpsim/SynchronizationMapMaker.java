@@ -78,13 +78,13 @@ public class SynchronizationMapMaker {
         int row = from.getRow();
         int col = from.getCol();
         
-        int absSourceRow = (row >= 0)?source.rowOffset + row:source.getLastRow() + row + 1;
-        int absSourceCol = (col >= 0)?source.colOffset + col:source.getLastCol() + col + 1;
+        int absSourceRow = (row >= 0)?source.getRowOffset() + row:source.getLastRow() + row + 1;
+        int absSourceCol = (col >= 0)?source.getColOffset() + col:source.getLastCol() + col + 1;
 
         int targetRow = to.getRow();
         int targetCol = to.getCol();
 
-        if(source.nRows == 0 || source.nCols == 0)
+        if(source.getNRows() == 0 || source.getNCols() == 0)
             return;
         
         if(targetPos == null) {
@@ -110,9 +110,9 @@ public class SynchronizationMapMaker {
             switch(targetPos) {
                 case ABOVE:
                 case BELOW:
-                    rowOffset = p.rowOffset;
+                    rowOffset = p.getRowOffset();
                     lastRow = p.getLastRow();
-                    colOffset = Math.max(source.colOffset, p.colOffset);
+                    colOffset = Math.max(source.getColOffset(), p.getColOffset());
                     lastCol = Math.min(source.getLastCol(), p.getLastCol());
                     
                     absSourceCol = (col >= 0)?colOffset + col:lastCol + col + 1;
@@ -120,9 +120,9 @@ public class SynchronizationMapMaker {
                     
                 case LEFT:
                 case RIGHT:
-                    rowOffset = Math.max(source.rowOffset, p.rowOffset);
+                    rowOffset = Math.max(source.getRowOffset(), p.getRowOffset());
                     lastRow = Math.min(source.getLastRow(), p.getLastRow());
-                    colOffset = p.colOffset;
+                    colOffset = p.getColOffset();
                     lastCol = p.getLastCol();
                     
                     absSourceRow = (row >= 0)?rowOffset + row:lastRow + row + 1;                    
@@ -138,22 +138,22 @@ public class SynchronizationMapMaker {
                 case LOWER_LEFT:
                     rowOffset = source.getLastRow() + 1;
                     lastRow = p.getLastRow();                    
-                    colOffset = p.colOffset;
-                    lastCol = source.colOffset - 1;
+                    colOffset = p.getColOffset();
+                    lastCol = source.getColOffset() - 1;
                     break;
                     
                 case UPPER_RIGHT:
-                    rowOffset = p.rowOffset;
-                    lastRow = source.rowOffset - 1;
+                    rowOffset = p.getRowOffset();
+                    lastRow = source.getRowOffset() - 1;
                     colOffset = source.getLastCol() + 1;
                     lastCol = p.getLastCol();
                     break;
                     
                 case UPPER_LEFT:
-                    rowOffset = p.rowOffset;
-                    lastRow = source.rowOffset - 1;
-                    colOffset = p.colOffset;
-                    lastCol = source.colOffset - 1;
+                    rowOffset = p.getRowOffset();
+                    lastRow = source.getRowOffset() - 1;
+                    colOffset = p.getColOffset();
+                    lastCol = source.getColOffset() - 1;
                     break;
             }
             
@@ -162,14 +162,14 @@ public class SynchronizationMapMaker {
             
             WQCellAddress sourceAddress = new WQCellAddress(
                     new WQThreadAddress(source.getAddress()),
-                    absSourceRow - source.rowOffset,
-                    absSourceCol - source.colOffset,
+                    absSourceRow - source.getRowOffset(),
+                    absSourceCol - source.getColOffset(),
                     absSourceRow, absSourceCol);
 
             WQCellAddress targetAddress = new WQCellAddress(
                     new WQThreadAddress(p.getAddress()),
-                    absTargetRow - p.rowOffset,
-                    absTargetCol - p.colOffset,
+                    absTargetRow - p.getRowOffset(),
+                    absTargetCol - p.getColOffset(),
                     absTargetRow, absTargetCol);                    
             
             syncMap.add(sourceAddress, targetAddress);

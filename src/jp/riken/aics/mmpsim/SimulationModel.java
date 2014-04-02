@@ -934,7 +934,7 @@ public class SimulationModel {
                 progress++;
                 
                 CellLocation2D next = exeman.nextCell(sender.getAddress(),
-                        partition.nRows, partition.nCols);
+                        partition.getNRows(), partition.getNCols());
                 
                 if(next == null) {
                     callbacks.threadFinishedTimeStep(address, ts);
@@ -1101,8 +1101,8 @@ public class SimulationModel {
                 return null;
             
             if(partition.contains(absRow, absCol))
-                return getCell(absRow - partition.rowOffset,
-                        absCol - partition.colOffset);
+                return getCell(absRow - partition.getRowOffset(),
+                        absCol - partition.getColOffset());
             
             return null;
         }
@@ -1182,15 +1182,15 @@ public class SimulationModel {
                         tmpProxies = new ProxyCell[proxyRange.getNCells()];
                         int proxyCellCoutner = 0;
 
-                        for(int row = proxyRange.nRows - 1; row >= 0; row--) {
-                            for(int col = proxyRange.nCols - 1; col >= 0; col--) {
-                                int absRow = proxyRange.rowOffset + row;
-                                int absCol = proxyRange.colOffset + col;
+                        for(int row = proxyRange.getNRows() - 1; row >= 0; row--) {
+                            for(int col = proxyRange.getNCols() - 1; col >= 0; col--) {
+                                int absRow = proxyRange.getRowOffset() + row;
+                                int absCol = proxyRange.getColOffset() + col;
                                 
                                 WQCellAddress proxyCellAddress 
                                         = new WQCellAddress(neighbourAddress, 
-                                                absRow - item.rowOffset, 
-                                                absCol - item.colOffset,
+                                                absRow - item.getRowOffset(), 
+                                                absCol - item.getColOffset(),
                                                 absRow, absCol);                                                
 
                                 ProxyCell proxyCell 
@@ -1218,12 +1218,12 @@ public class SimulationModel {
                 neighbours.put(pos, neighbourInfos);
             } // for(pos)
             
-            cells = new Cell[partition.nRows][partition.nCols];
+            cells = new Cell[partition.getNRows()][partition.getNCols()];
             
-            for(int row = partition.nRows - 1; row >= 0; row--) {
-                for(int col = partition.nCols - 1; col >= 0; col--) {
-                    int absRow = partition.rowOffset + row;
-                    int absCol = partition.colOffset + col;
+            for(int row = partition.getNRows() - 1; row >= 0; row--) {
+                for(int col = partition.getNCols() - 1; col >= 0; col--) {
+                    int absRow = partition.getRowOffset() + row;
+                    int absCol = partition.getColOffset() + col;
                     
                     int nConnections = getNumberOfConnections(
                             absRow, absCol, exeman.cellDependancy);
@@ -1249,8 +1249,8 @@ public class SimulationModel {
                     
                     CellLocation2D loc 
                             = exeman.getBoundaryExchangeTriggerCell(
-                                    d, partition.nRows, 
-                                    partition.nCols, gbs);
+                                    d, partition.getNRows(), 
+                                    partition.getNCols(), gbs);
                     
                     if(loc != null) {
                         getCell(loc.getRow(), loc.getCol())
@@ -1260,7 +1260,7 @@ public class SimulationModel {
             }
             
             CellLocation2D cellAtBarrierLoc = exeman.getCellAtBarrier(
-                    partition.nRows, partition.nCols);
+                    partition.getNRows(), partition.getNCols());
             
             if(cellAtBarrierLoc != null) {
                 getCell(cellAtBarrierLoc.getRow(), cellAtBarrierLoc.getCol())

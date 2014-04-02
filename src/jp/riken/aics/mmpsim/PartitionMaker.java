@@ -13,42 +13,11 @@ public abstract class PartitionMaker {
     
     ///// NESTED DATATYPES ////////////////////////////////////////////////////
     
-    public class ClusterParamSet {
-        private int nRowDivs;
-        private int nColDivs;
-        private boolean isHeterogenous;
-        private ComputerParamSet[] computerParamsets;
-    }
-    
-    public class ComputerParamSet {
-        private int nRowDivs;
-        private int nColDivs;
-        private NodeParamSet nodeParamset;
-    }
-    
-    public class NodeParamSet {
-        private int nRowDivs;
-        private int nColDivs;
-        private ProcessorParamSet[] processorParamsets;
-    }
-    
-    public class ProcessorParamSet {
-        private int nRowDivs;
-        private int nColDivs;
-        private int nBlockRows;
-        private int nBlockCols;
-        private boolean isDividedByBlock;
-    }
     
     private enum DivisionBy {
         ROWS,
         COLS,
         AUTO
-    };
-    
-    private enum OutcomeType {
-        GRID_DIVISION,
-        DIRECTIONAL_DIVISION
     };
     
     public static class Penalty {
@@ -61,121 +30,9 @@ public abstract class PartitionMaker {
         }
     };
     
-    public class ParamToken {
-        private boolean isBest = false;
-        private String description = null;
-        private float borderPenalty;
-        private float leftoverPenalty;
-
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        public float getBorderPenalty() {
-            return borderPenalty;
-        }
-
-        public void setBorderPenalty(float borderPenalty) {
-            this.borderPenalty = borderPenalty;
-        }
-
-        public float getLeftoverPenalty() {
-            return leftoverPenalty;
-        }
-
-        public void setLeftoverPenalty(float leftoverPenalty) {
-            this.leftoverPenalty = leftoverPenalty;
-        }
-        
-        public void setBest() {
-            isBest = true;
-        }
-        
-        public boolean isBest() {
-            return isBest;
-        }
-    }
-    
     
     ///// CONSTANTS ///////////////////////////////////////////////////////////
 
-    public final static PartitionMaker HOMOGENOUS_NODES_WITH_GPU = new PartitionMaker(null) {
-        class Paramset extends ParamToken {
-            int clusterNRowDivs = -1;
-            int clusterNColDivs = -1;
-            boolean clusterIsHeterogenous = false;
-            int computerNRowDivs = -1;
-            int computerNColDivs = -1;
-            DivisionBy processorDivisionDirection = null;
-            int[] cpuNRowDivs = null;
-            int[] cpuNColDivs = null;
-            int[] gpuBlockNRows = null;
-            int[] gpuBlockNCols = null;
-            boolean isConsumed = false;
-            
-            public Paramset(Paramset p) {
-                clusterNRowDivs = p.clusterNRowDivs;
-                clusterNColDivs = p.clusterNColDivs;
-                computerNRowDivs = p.computerNRowDivs;
-                processorDivisionDirection = p.processorDivisionDirection;
-                cpuNRowDivs = p.cpuNRowDivs;
-                cpuNColDivs = p.cpuNColDivs;
-                gpuBlockNRows = p.gpuBlockNRows;
-                gpuBlockNCols = p.gpuBlockNCols;
-                isConsumed = isConsumed;
-            } 
-        }
-        
-        @Override
-        public PartitionMap[] allPartitionCandidates(GridDivision2D d, ClusterParams clusterParams) {            
-            
-            return null;
-        }
-        
-        public ParamToken[] generateAllPermutations() {
-            
-        }
-        
-        private void generateAllPermutationsForHomogeneusCluster(
-                ClusterParams clusterParams, 
-                Paramset base, 
-                ArrayList<Paramset> bag) 
-        {
-            final int nComputers = clusterParams.getNumberOfComputers();
-            int[] nRowDivs = factorsOf(nComputers);
-            int[] nColDivs = cofactorsOf(nComputers, nRowDivs);
-            for(int i = 0; i < nRowDivs.length; i++) {
-                Paramset pset = new Paramset(base);
-                pset.clusterNRowDivs = nRowDivs[i];
-                pset.clusterNColDivs = nColDivs[i];
-                bag.add(pset);
-            }
-        }
-        
-        private void generateAllPermutationsForHeterogenousCluster(
-                ClusterParams clusterParams,
-                Paramset base,
-                ArrayList<Paramset> bag) 
-        {
-            Paramset pset = new Paramset(base);
-            pset.clusterNRowDivs = clusterParams.getNumberOfComputers();
-            pset.clusterNColDivs = 1;
-            pset.clusterIsHeterogenous = true;
-            bag.add(pset);
-            
-            pset = new Paramset(pset);
-            pset.clusterNRowDivs = 1;
-            pset.clusterNColDivs = clusterParams.getNumberOfComputers();
-            pset.clusterIsHeterogenous = true;
-            bag.add(pset);
-        }
-        
-        private void generateAllPermutationsForComputer(ComputerParams params)
-    };
     
     /**
      * Stupid thing. For comparison only.
@@ -451,9 +308,9 @@ public abstract class PartitionMaker {
         {
             ArrayList<PartitionMap> candidates = new ArrayList<PartitionMap>();
             
-            int[] nComputersFactors = factorsOf(nComputers);
-            int[] nNodesFactors = factorsOf(nNodes);
-            int[] nCpusFactors = factorsOf(nCpus);
+            int[] nComputersFactors = findFactors(nComputers);
+            int[] nNodesFactors = findFactors(nNodes);
+            int[] nCpusFactors = findFactors(nCpus);
             
             ParamSet paramSet = new ParamSet();
             
@@ -525,10 +382,8 @@ public abstract class PartitionMaker {
             int nComputerRowDivs = -1;
             int nComputerColDivs = -1;
             DivisionBy nodeDivisionMethod;
-            int[] nCpuRowDivs = null;
-            int[] nCpuColDivs = null;
-            int[] nGpuRowsPerBlock = null;
-            int[] nGpuColsPerBlock = null;
+            int[] nCpuGroupRowDivs = null;
+            int[] nCpuGroupColDivs = null;
             
             @Override 
             public Object clone() {
@@ -538,16 +393,14 @@ public abstract class PartitionMaker {
                 cp.nComputerColDivs = nComputerColDivs;
                 cp.nComputerRowDivs = nComputerRowDivs;
                 cp.nodeDivisionMethod = nodeDivisionMethod;
-                cp.nCpuColDivs = (int[])nCpuColDivs.clone();
-                cp.nCpuRowDivs = (int[])nCpuRowDivs.clone();
-                cp.nGpuRowsPerBlock = (int[])nGpuRowsPerBlock;
-                cp.nGpuColsPerBlock = (int[])nGpuColsPerBlock;
+                cp.nCpuGroupColDivs = (int[])nCpuGroupColDivs.clone();
+                cp.nCpuGroupRowDivs = (int[])nCpuGroupRowDivs.clone();
                 return cp;
             }
             
             @Override
             public String toString() {
-                return String.format("(%d, %d) x (%d, %d) x %s (%s, %s)", nClusterRowDivs, nClusterColDivs, nComputerRowDivs, nComputerColDivs,nodeDivisionMethod.toString(), Arrays.toString(nCpuRowDivs), Arrays.toString(nCpuColDivs));
+                return String.format("(%d, %d) x (%d, %d) x %s (%s, %s)", nClusterRowDivs, nClusterColDivs, nComputerRowDivs, nComputerColDivs,nodeDivisionMethod.toString(), Arrays.toString(nCpuGroupRowDivs), Arrays.toString(nCpuGroupColDivs));
             }
         };
         
@@ -605,11 +458,11 @@ public abstract class PartitionMaker {
         {                    
             ArrayList<PartitionMap> partitions = new ArrayList<PartitionMap>();
             
-            int nRows = d.nRows;
-            int nCols = d.nCols;
+            int nRows = d.getNRows();
+            int nCols = d.getNCols();
             
-            int[] nComputersFactors = factorsOf(nComputers);
-            int[] nNodesFactors = factorsOf(nNodes);
+            int[] nComputersFactors = findFactors(nComputers);
+            int[] nNodesFactors = findFactors(nNodes);
             
             ParamSet paramSet = new ParamSet();
             
@@ -659,8 +512,8 @@ public abstract class PartitionMaker {
             
             paramSet.nodeDivisionMethod = divideBy;
             
-            paramSet.nCpuColDivs = new int[nCpusPerGroup.length];
-            paramSet.nCpuRowDivs = new int[nCpusPerGroup.length];
+            paramSet.nCpuGroupColDivs = new int[nCpusPerGroup.length];
+            paramSet.nCpuGroupRowDivs = new int[nCpusPerGroup.length];
             
             if(divideBy == DivisionBy.ROWS) {
                 portionSizes = portionSizes(nRows, cpuGroupProportions);
@@ -685,7 +538,7 @@ public abstract class PartitionMaker {
             int leastLeftover = Integer.MAX_VALUE;
             int bestNRowDivs = 1;
             
-            int[] nDivisionsFactors = factorsOf(nDivisions);
+            int[] nDivisionsFactors = findFactors(nDivisions);
             
             for(int i = nDivisionsFactors.length - 1; i >= 0; i--) {
                 int nRowDivs = nDivisionsFactors[i];
@@ -697,8 +550,8 @@ public abstract class PartitionMaker {
                 }
             }
 
-            paramSet.nCpuRowDivs[index] = bestNRowDivs;
-            paramSet.nCpuColDivs[index] = nDivisions / bestNRowDivs;
+            paramSet.nCpuGroupRowDivs[index] = bestNRowDivs;
+            paramSet.nCpuGroupColDivs[index] = nDivisions / bestNRowDivs;
             
             return leastLeftover;
         }
@@ -726,7 +579,7 @@ public abstract class PartitionMaker {
                     
                     for(int k = node.getNumberOfSubPartitions() - 1; k >= 0; k--) {
                         PartitionMap cpuGroup = node.getSubPartition(k);
-                        subdivs = divide2D(cpuGroup, paramSet.nCpuRowDivs[k], paramSet.nCpuColDivs[k]);
+                        subdivs = divide2D(cpuGroup, paramSet.nCpuGroupRowDivs[k], paramSet.nCpuGroupColDivs[k]);
                         cpuGroup.setSubdivisions(subdivs);
                     }
                 }
@@ -751,7 +604,7 @@ public abstract class PartitionMaker {
                 ComputerParams computerParams = clusterParams.getComputerParams(i);
                 
                 GridDivision2D bounds = computer;
-                int nRowDivs = findBestPartitioning(bounds.nRows, bounds.nCols, computerParams.getNumberOfNodes());
+                int nRowDivs = findBestPartitioning(bounds.getNRows(), bounds.getNCols(), computerParams.getNumberOfNodes());
                 int nColDivs = computerParams.getNumberOfNodes() / nRowDivs;
                 
                 subdivs = divide2D(bounds, nRowDivs, nColDivs);
@@ -771,7 +624,7 @@ public abstract class PartitionMaker {
                         ProcessorParams cpuGroupParams = nodeParams.getCpuGroupParams(k);
                         
                         bounds = cpuGroup;
-                        nRowDivs = findBestPartitioning(bounds.nRows, bounds.nCols, cpuGroupParams.getNCores());
+                        nRowDivs = findBestPartitioning(bounds.getNRows(), bounds.getNCols(), cpuGroupParams.getNCores());
                         nColDivs = cpuGroupParams.getNCores() / nRowDivs;
                         
                         subdivs = divide2D(bounds, nRowDivs, nColDivs);
@@ -809,7 +662,7 @@ public abstract class PartitionMaker {
         return lo;
     }
     
-    private static int[] factorsOf(int n) {
+    private static int[] findFactors(int n) {
         ArrayList<Integer> factorsList = new ArrayList<Integer>();
         for(int i = 1; i <= n; i++) {
             if(n % i == 0)
@@ -820,14 +673,6 @@ public abstract class PartitionMaker {
             factors[i] = factorsList.get(i).intValue();
         }
         return factors;
-    }
-    
-    private static int[] cofactorsOf(int n, int[] factors) {
-        int[] cofactors = new int[factors.length];
-        for(int i = 0; i < cofactors.length; i++) {
-            cofactors[i] = n/factors[i];
-        }
-        return cofactors;
     }
     
     private static int findBiggestCommonDivisor(int a, int b) {
@@ -845,7 +690,7 @@ public abstract class PartitionMaker {
     }
     
     private static int findBestPartitioning(int nRows, int nCols, int nDivisions) {
-        int[] nDivisionsFactors = factorsOf(nDivisions);
+        int[] nDivisionsFactors = findFactors(nDivisions);
         int leastLeftover = Integer.MAX_VALUE;
         int bestNRowDivs = 1;
         for(int i = nDivisionsFactors.length - 1; i >= 0; i--) {
@@ -876,7 +721,7 @@ public abstract class PartitionMaker {
             
             for(int nodeRank = computerParams.getNumberOfNodes() - 1; nodeRank >= 0; nodeRank--) {
                 PartitionMap nodeMap = computerMap.getSubPartition(nodeRank);
-                borderPenalty += (nodeMap.nRows + nodeMap.nCols) * 2;
+                borderPenalty += (nodeMap.getNRows() + nodeMap.getNCols()) * 2;
                 
                 for(int cpuGroupRank = nodeParams.getNumberOfCpuGroups() - 1; cpuGroupRank >= 0; cpuGroupRank--) {
                     PartitionMap cpuGroupMap = nodeMap.getSubPartition(cpuGroupRank);
@@ -901,7 +746,7 @@ public abstract class PartitionMaker {
             leftOverPenalty += (timeFactor - minTimeFactor);
         }
         
-        borderPenalty -= (map.nCols + map.nRows)*2;
+        borderPenalty -= (map.getNCols() + map.getNRows())*2;
         
         return new Penalty(leftOverPenalty, borderPenalty);
     }
@@ -910,10 +755,10 @@ public abstract class PartitionMaker {
     
     // <editor-fold defaultstate="collapsed" desc="Fundamental Dividing Functions">
     private static GridDivision2D[] divide1D(GridDivision2D d, int nDivisions, DivisionBy divBy) {
-        final int nRows = d.nRows;
-        final int nCols = d.nCols;
-        final int co = d.colOffset;
-        final int ro = d.rowOffset;
+        final int nRows = d.getNRows();
+        final int nCols = d.getNCols();
+        final int co = d.getColOffset();
+        final int ro = d.getRowOffset();
         
         GridDivision2D[] divisions = new GridDivision2D[nDivisions];
 
@@ -958,10 +803,10 @@ public abstract class PartitionMaker {
     }        
 
     private static GridDivision2D[] divide1D(GridDivision2D d, float[] proportions, DivisionBy divBy) {
-        final int nRows = d.nRows;
-        final int nCols = d.nCols;
-        final int co = d.colOffset;
-        final int ro = d.rowOffset;
+        final int nRows = d.getNRows();
+        final int nCols = d.getNCols();
+        final int co = d.getColOffset();
+        final int ro = d.getRowOffset();
         
         GridDivision2D[] divisions = new GridDivision2D[proportions.length];
         
@@ -1000,20 +845,20 @@ public abstract class PartitionMaker {
     private static GridDivision2D[] divide2D(GridDivision2D d, int nRowDivs,
             int nColDivs) 
     {
-        int nRowsPerDivision = d.nRows / nRowDivs;
-        int nColsPerDivision = d.nCols / nColDivs;
+        int nRowsPerDivision = d.getNRows() / nRowDivs;
+        int nColsPerDivision = d.getNCols() / nColDivs;
 
-        int nRowsLeftOver = d.nRows % nRowDivs;
-        int nColsLeftOver = d.nCols % nColDivs;
+        int nRowsLeftOver = d.getNRows() % nRowDivs;
+        int nColsLeftOver = d.getNCols() % nColDivs;
 
         List<GridDivision2D> subdivisions = new ArrayList<GridDivision2D>();
 
-        int rowOffset = d.rowOffset;
+        int rowOffset = d.getRowOffset();
         for(int i = 0; i < nRowDivs; i++) {
             int divisionRows = nRowsPerDivision;
             if(i < nRowsLeftOver)
                 divisionRows++;
-            int colOffset = d.colOffset;
+            int colOffset = d.getColOffset();
             for(int j = 0; j < nColDivs; j++) {
                 int divisionCols = nColsPerDivision;
                 if(j < nColsLeftOver)
@@ -1022,127 +867,6 @@ public abstract class PartitionMaker {
                 colOffset += divisionCols;
             }
             rowOffset += divisionRows;
-        }
-        
-        return subdivisions.toArray(new GridDivision2D[subdivisions.size()]);
-    }
-    
-    public static PartitionMap[] getAllPossiblePartitionings(GridDivision2D root, int nDivisions) {
-        final int[] nRowDivs = factorsOf(nDivisions);
-        final int[] nColDivs = cofactorsOf(nDivisions, nRowDivs);
-        final int nAlternatives = nRowDivs.length;
-        
-        PartitionMap[] allAlternatives = new PartitionMap[nAlternatives];
-        for(int a = 0; a < nAlternatives; a++) {
-            PartitionMap map = new PartitionMap(root);
-            map.setSubdivisions(divide2D(map, nRowDivs[a], nColDivs[a]));
-            allAlternatives[a] = map;
-        }
-        
-        return allAlternatives;
-    }
-    
-    public static PartitionMap[] getAllPossiblePartitionings(GridDivision2D root, int nDivisions[]) {
-        int depth = nDivisions.length;
-        int[][] nRowDivs = new int[depth][];
-        int[][] nColDivs = new int[depth][];
-        
-        for(int d = 0; d < depth; d++) {
-            nRowDivs[d] = factorsOf(nDivisions[d]);
-            nColDivs[d] = cofactorsOf(nDivisions[d], nRowDivs[d]);
-        }
-        
-        ArrayList<int[]> allPermutations = new ArrayList<int[]>();
-        findAllPermutations(allPermutations, nRowDivs, new int[depth], 0);
-        
-        PartitionMap[] allAlternatives = new PartitionMap[allPermutations.size()];
-        for(int i = allPermutations.size() - 1; i >= 0; i--) {
-            PartitionMap map = new PartitionMap(root);
-            divide(map, nRowDivs, nColDivs, allPermutations.get(i), 0);
-        }
-        
-        return allAlternatives;
-    }
-    
-    private static void findAllPermutations(ArrayList<int[]> bag, 
-            int[][] nRowDivs, int[] address, int depth) 
-    {
-        if(depth == address.length) {
-            bag.add(Arrays.copyOf(address, address.length));
-            return;
-        }
-        
-        for(int i = 0; i < nRowDivs[depth].length - 1; i++) {
-            address[depth] = i;
-            findAllPermutations(bag, nRowDivs, address, depth + 1);
-        }
-    }
-    
-    private static void divide(PartitionMap map, final int[][] nRowDivs, 
-            final int[][] nColDivs, final int[] address, final int depth) 
-    {
-        if(depth == address.length)
-            return;
-        
-        GridDivision2D[] subdivs = divide2D(map, nRowDivs[depth][address[depth]], nColDivs[depth][address[depth]]);
-        map.setSubdivisions(subdivs);
-        for(int i = map.getNumberOfSubPartitions() - 1; i >= 0; i--) {
-            divide(map.getSubPartition(i), nRowDivs, nColDivs, address, depth + 1);
-        }
-    }
-    
-    protected static GridSize2D[] getAllPossibleBlockDimensions(int blockSize) {
-        int[] rowSizes = factorsOf(blockSize);
-        int[] colSizes = cofactorsOf(blockSize, rowSizes);
-        GridSize2D[] dims = new GridSize2D[rowSizes.length];
-        for(int i = 0; i < dims.length; i++) {
-            dims[i] = new GridSize2D(rowSizes[i], colSizes[i]);
-        }
-        return dims;
-    }
-    
-    public static int getBestBlockDimensionIndex(GridDivision2D d, GridSize2D[] candidates) {
-        int bestIndex = -1;
-        int minLeftover = Integer.MAX_VALUE;
-        for(int i = 0; i < candidates.length; i++) {
-            int nRowDivs = d.nRows/candidates[i].nRows;
-            int nColDivs = d.nCols/candidates[i].nCols;
-            int nFullyDividedRows = nRowDivs * candidates[i].nRows;
-            int nFullyDividedCols = nColDivs * candidates[i].nCols;
-            int nFullyDividedCells = nFullyDividedCols * nFullyDividedRows;
-            int leftover = d.getNCells() - nFullyDividedCells;
-            if(leftover < minLeftover) {
-                bestIndex = i;
-                minLeftover = leftover;
-            }
-        }
-        
-        return bestIndex;
-    }
-    
-    public static GridDivision2D[] partitionByBlock(GridDivision2D d, GridSize2D blockDims) {
-        int nRowDivs = d.nRows / blockDims.nRows;
-        
-        if(d.nRows % blockDims.nRows > 0) {
-            nRowDivs++;
-        }
-        
-        int nColDivs = d.nCols / blockDims.nCols;
-        
-        if(d.nCols % blockDims.nCols > 0) {
-            nColDivs++;
-        }
-        
-        ArrayList<GridDivision2D> subdivisions = new ArrayList<GridDivision2D>();
-        
-        for(int i = 0; i < nRowDivs; i++) {
-            for(int j = 0; j < nColDivs; j++) {
-                subdivisions.add(GridDivision2D.make(
-                        i*blockDims.nRows, 
-                        j*blockDims.nCols, 
-                        Math.min((i+1)*blockDims.nRows - 1, d.nRows - 1), 
-                        Math.min((j + 1)*blockDims.nCols - 1, d.nCols - 1)));
-            }
         }
         
         return subdivisions.toArray(new GridDivision2D[subdivisions.size()]);

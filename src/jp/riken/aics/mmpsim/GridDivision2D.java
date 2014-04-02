@@ -8,41 +8,26 @@ package jp.riken.aics.mmpsim;
  *
  * @author hamed
  */
-public class GridDivision2D  {
+public class GridDivision2D  extends GridSize2D{
     public static interface ToRun {
         public void run(int row, int col, int absRow, int absCol, Object[] params);
     }
     
-    private int rowOffset;
-    private int colOffset;
-    private int nRows;
-    private int nCols;
+    public final int rowOffset;
+    public final int colOffset;
 
     public GridDivision2D(int rowOffset, int colOffset, int nRows, int nCols) {
+        super(nRows, nCols);
         this.rowOffset = rowOffset;
         this.colOffset = colOffset;
-        this.nRows = nRows;
-        this.nCols = nCols;
+    }
+    
+    public static GridDivision2D make(int rowOffset, int colOffset, int lastRow, int lastCol) {
+        return new GridDivision2D(rowOffset, colOffset, lastRow - rowOffset, lastCol - colOffset);
     }
     
     public GridDivision2D(int nRows, int nCols) {
         this(0, 0, nRows, nCols);
-    }
-
-    public int getRowOffset() {
-        return rowOffset;
-    }
-
-    public int getColOffset() {
-        return colOffset;
-    }
-
-    public int getNRows() {
-        return nRows;
-    }
-
-    public int getNCols() {
-        return nCols;
     }
     
     public int getLastRow() {
